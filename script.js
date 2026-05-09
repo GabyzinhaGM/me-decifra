@@ -1,124 +1,183 @@
+import {
+  createClient
+} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"
+
+// ======================================
+// SUPABASE
+// ======================================
+
 const SUPABASE_URL =
   "https://zeqmqluqccawgawsbcpc.supabase.co"
 
 const SUPABASE_KEY =
   "sb_publishable_qu5Ut2JmpKFecim5QqIz5g_GBYJLq-N"
 
-const supabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-)
+const supabase =
+  createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  )
+
+// ======================================
+// PERGUNTAS
+// ======================================
 
 const questions = [
 
   "Qual é minha comida favorita?",
 
-  "Qual é meu maior medo?",
-
   "Qual é meu maior sonho?",
-
-  "O que eu mais gosto em mim?",
-
-  "O que eu menos gosto em mim?",
-
-  "Qual é meu time de futebol favorito?",
-
-  "Qual é minha série ou novela favorita?",
-
-  "O que eu mais admiro em você?",
-
-  "Qual país eu gostaria de visitar?",
-
-  "Qual é meu hobby favorito?",
-
-  "Qual animal de estimação eu mais gosto?",
-
-  "Do que eu mais tenho pavor?",
-
-  "Qual número de sapato eu uso?",
-
-  "Qual historinha infantil eu mais gostei?",
-
-  "Qual é minha cor favorita?",
-
-  "Qual é meu cantor ou banda favorita?",
-
-  "Qual é meu maior defeito?",
 
   "Qual é minha maior qualidade?",
 
-  "Qual é minha bebida favorita?",
+  "Qual é meu maior defeito?",
 
-  "Qual é minha estação do ano favorita?",
+  "Qual é meu hobby favorito?",
 
-  "Qual é meu filme favorito?",
-
-  "Qual é meu doce favorito?",
-
-  "Qual é meu prato favorito?",
+  "Qual é minha cor favorita?",
 
   "Qual aplicativo eu mais uso?",
 
-  "Qual foi meu maior trauma de infância?",
+  "Qual é meu maior medo?",
 
-  "Qual é meu maior objetivo atualmente?",
+  "Qual é meu filme favorito?",
 
-  "Qual é minha rede social favorita?",
-
-  "Qual é meu estilo musical favorito?",
-
-  "Qual é meu maior vício?",
-
-  "O que mais me irrita nas pessoas?",
-
-  "Qual é meu lugar favorito?",
-
-  "Qual é minha memória favorita?",
-
-  "Qual é meu cheiro favorito?",
-
-  "Qual é meu maior arrependimento?",
-
-  "Qual é meu signo?",
-
-  "Qual era minha matéria favorita na escola?",
-
-  "Qual é meu maior medo em relacionamento?",
-
-  "Qual emoji eu mais uso?",
-
-  "Qual é minha mania mais estranha?",
-
-  "Qual é meu fast food favorito?"
+  "Qual é meu doce favorito?"
 
 ]
 
+// ======================================
+// FRASES
+// ======================================
+
+const couplePhrases = [
+
+  "💘 O amor vai sobreviver?",
+
+  "🔥 Quem conhece melhor o mozão?",
+
+  "😍 Hora da verdade do casal!",
+
+  "💞 Será que vocês têm conexão perfeita?"
+
+]
+
+const friendsPhrases = [
+
+  "😎 Amizade forte ou fake?",
+
+  "🔥 Quem conhece mais o amigo?",
+
+  "👀 Agora ninguém esconde nada!",
+
+  "🤝 Testando amizade verdadeira!"
+]
+
+// ======================================
+// SONS
+// ======================================
+
+const clickSound =
+  document.getElementById("clickSound")
+
+const successSound =
+  document.getElementById("successSound")
+
+const timerSound =
+  document.getElementById("timerSound")
+
+const winSound =
+  document.getElementById("winSound")
+
+function play(sound){
+
+  if(!sound) return
+
+  sound.currentTime = 0
+
+  sound.play()
+    .catch(()=>{})
+}
+
+// ======================================
+// VARIÁVEIS
+// ======================================
+
 let roomCode = ""
 
-let myAnswers = []
+let timeLeft = 15
+
+let timer
+
+// ======================================
+// EXPOR FUNÇÕES
+// ======================================
+
+window.createRoom = createRoom
+window.joinRoom = joinRoom
+window.startQuestions = startQuestions
+window.saveAnswers = saveAnswers
+
+// ======================================
+// GERAR CÓDIGO
+// ======================================
 
 function generateCode(){
 
   return Math.random()
     .toString(36)
-    .substring(2, 8)
+    .substring(2,8)
     .toUpperCase()
 }
 
+// ======================================
+// CRIAR SALA
+// ======================================
+
 async function createRoom(){
+
+  play(clickSound)
+
+  const playerName =
+    document
+      .getElementById("playerName")
+      .value
+      .trim()
+
+  const mode =
+    document
+      .getElementById("gameMode")
+      .value
+
+  if(!playerName){
+
+    alert("Digite seu nome")
+
+    return
+  }
 
   roomCode = generateCode()
 
-  const { error } = await supabase
-    .from("rooms")
-    .insert([
-      {
+  const { error } =
+    await supabase
+      .from("rooms")
+      .insert([{
+
         code: roomCode,
+
+        mode: mode,
+
+        player1_name: playerName,
+
         player1_answers: [],
+
+        player2_name: "",
+
         player2_answers: [],
+
         status: "waiting"
-      }
-    ])
+
+      }])
 
   if(error){
 
@@ -129,26 +188,40 @@ async function createRoom(){
     return
   }
 
-  document
-    .getElementById("home")
-    .classList.add("hidden")
-
-  document
-    .getElementById("waiting")
-    .classList.remove("hidden")
+  show("waiting")
 
   document
     .getElementById("roomCode")
     .innerText = roomCode
 }
 
+// ======================================
+// ENTRAR NA SALA
+// ======================================
+
 async function joinRoom(){
 
-  roomCode = document
-    .getElementById("roomInput")
-    .value
-    .trim()
-    .toUpperCase()
+  play(clickSound)
+
+  const playerName =
+    document
+      .getElementById("playerName")
+      .value
+      .trim()
+
+  roomCode =
+    document
+      .getElementById("roomInput")
+      .value
+      .trim()
+      .toUpperCase()
+
+  if(!playerName){
+
+    alert("Digite seu nome")
+
+    return
+  }
 
   if(!roomCode){
 
@@ -157,44 +230,64 @@ async function joinRoom(){
     return
   }
 
-  const { data, error } = await supabase
-    .from("rooms")
-    .select("*")
-    .eq("code", roomCode)
-    .single()
+  const { data, error } =
+    await supabase
+      .from("rooms")
+      .select("*")
+      .eq("code", roomCode)
+      .single()
 
   if(error || !data){
-
-    console.log(error)
 
     alert("Sala não encontrada")
 
     return
   }
 
+  await supabase
+    .from("rooms")
+    .update({
+
+      player2_name: playerName,
+
+      status: "playing"
+
+    })
+    .eq("code", roomCode)
+
   startQuestions()
 }
 
-function startQuestions(){
+// ======================================
+// INICIAR PERGUNTAS
+// ======================================
 
-  document
-    .getElementById("home")
-    .classList.add("hidden")
+async function startQuestions(){
 
-  document
-    .getElementById("waiting")
-    .classList.add("hidden")
+  const { data, error } =
+    await supabase
+      .from("rooms")
+      .select("*")
+      .eq("code", roomCode)
+      .single()
 
-  document
-    .getElementById("questionsScreen")
-    .classList.remove("hidden")
+  if(error){
+
+    alert("Erro ao iniciar jogo")
+
+    return
+  }
+
+  show("questionsScreen")
+
+  showPhrase(data.mode)
 
   const container =
     document.getElementById("questions")
 
   container.innerHTML = ""
 
-  questions.forEach((question, index)=>{
+  questions.forEach((question,index)=>{
 
     container.innerHTML += `
 
@@ -214,32 +307,82 @@ function startQuestions(){
 
     `
   })
+
+  startTimer()
 }
+
+// ======================================
+// TIMER
+// ======================================
+
+function startTimer(){
+
+  clearInterval(timer)
+
+  timeLeft = 15
+
+  timer = setInterval(()=>{
+
+    const timerEl =
+      document.getElementById("timer")
+
+    if(timerEl){
+
+      timerEl.innerText =
+        `⏱️ ${timeLeft}s`
+    }
+
+    if(timeLeft <= 3){
+
+      play(timerSound)
+
+      navigator.vibrate?.(200)
+    }
+
+    if(timeLeft <= 0){
+
+      clearInterval(timer)
+
+      saveAnswers()
+    }
+
+    timeLeft--
+
+  },1000)
+}
+
+// ======================================
+// SALVAR
+// ======================================
 
 async function saveAnswers(){
 
-  myAnswers = []
+  clearInterval(timer)
 
-  questions.forEach((question, index)=>{
+  play(successSound)
 
-    const value = document
-      .getElementById(`q${index}`)
-      .value
+  const answers = []
 
-    myAnswers.push(value)
+  questions.forEach((_,index)=>{
+
+    const value =
+      document
+        .getElementById(`q${index}`)
+        ?.value || ""
+
+    answers.push(value)
   })
 
-  const { data, error } = await supabase
-    .from("rooms")
-    .select("*")
-    .eq("code", roomCode)
-    .single()
+  const { data, error } =
+    await supabase
+      .from("rooms")
+      .select("*")
+      .eq("code", roomCode)
+      .single()
 
   if(error){
 
-    console.log(error)
-
-    alert("Erro ao buscar sala")
+    alert("Erro ao salvar")
 
     return
   }
@@ -253,22 +396,20 @@ async function saveAnswers(){
 
     updateData = {
 
-      player1_answers: myAnswers,
-
-      status: "player1_finished"
+      player1_answers: answers
     }
 
   }else{
 
     updateData = {
 
-      player2_answers: myAnswers,
+      player2_answers: answers,
 
       status: "completed"
     }
   }
 
-  const { error: updateError } =
+  const { error:updateError } =
     await supabase
       .from("rooms")
       .update(updateData)
@@ -276,83 +417,107 @@ async function saveAnswers(){
 
   if(updateError){
 
-    console.log(updateError)
-
-    alert("Erro ao salvar respostas")
+    alert("Erro ao atualizar respostas")
 
     return
   }
-
-  alert("Respostas salvas com sucesso!")
 
   showResult()
 }
 
+// ======================================
+// RESULTADO
+// ======================================
+
 async function showResult(){
 
-  const { data, error } = await supabase
-    .from("rooms")
-    .select("*")
-    .eq("code", roomCode)
-    .single()
+  const { data, error } =
+    await supabase
+      .from("rooms")
+      .select("*")
+      .eq("code", roomCode)
+      .single()
 
   if(error){
 
-    console.log(error)
-
-    alert("Erro ao carregar resultados")
+    alert("Erro ao carregar resultado")
 
     return
   }
 
-  document
-    .getElementById("questionsScreen")
-    .classList.add("hidden")
+  show("resultScreen")
 
-  document
-    .getElementById("resultScreen")
-    .classList.remove("hidden")
+  play(winSound)
 
-  const player1 =
+  const p1 =
     data.player1_answers || []
 
-  const player2 =
+  const p2 =
     data.player2_answers || []
 
-  let matches = 0
+  const score1 =
+    calculateScore(p1,p2)
 
-  player1.forEach((answer, index)=>{
+  const score2 =
+    calculateScore(p2,p1)
 
-    if(
+  let winner = ""
 
-      player2[index] &&
+  if(data.mode === "casal"){
 
-      answer
-        .toLowerCase()
-        .trim() ===
+    winner =
 
-      player2[index]
-        .toLowerCase()
-        .trim()
+      score1 > score2
 
-    ){
-      matches++
-    }
-  })
+        ? "💘 Você conhece o mozão melhor!"
+
+        : score2 > score1
+
+        ? "🔥 Seu parceiro decorou sua alma!"
+
+        : "😍 Vocês têm conexão perfeita!"
+
+  }else{
+
+    winner =
+
+      score1 > score2
+
+        ? "😎 Mestre da amizade!"
+
+        : score2 > score1
+
+        ? "🔥 Seu amigo sabe tudo!"
+
+        : "🤝 Amizade equilibrada!"
+  }
 
   document
     .getElementById("score")
-    .innerText =
-      `${matches} respostas iguais`
+    .innerHTML = `
 
-  const answersContainer =
+      <h2>${winner}</h2>
+
+      <p>
+        ${data.player1_name || "Jogador 1"}:
+        ${score1} pts
+      </p>
+
+      <p>
+        ${data.player2_name || "Jogador 2"}:
+        ${score2} pts
+      </p>
+
+    `
+
+  const container =
     document.getElementById("answers")
 
-  answersContainer.innerHTML = ""
+  container.innerHTML = ""
 
-  questions.forEach((question, index)=>{
+  questions.forEach((question,index)=>{
 
-    answersContainer.innerHTML += `
+    container.innerHTML += `
 
       <div class="answer-card">
 
@@ -361,16 +526,16 @@ async function showResult(){
         </h3>
 
         <p>
-          Jogador 1:
+          ${data.player1_name || "Jogador 1"}:
           <strong>
-            ${player1[index] || "-"}
+            ${p1[index] || "-"}
           </strong>
         </p>
 
         <p>
-          Jogador 2:
+          ${data.player2_name || "Jogador 2"}:
           <strong>
-            ${player2[index] || "-"}
+            ${p2[index] || "-"}
           </strong>
         </p>
 
@@ -378,4 +543,73 @@ async function showResult(){
 
     `
   })
+}
+
+// ======================================
+// PONTUAÇÃO
+// ======================================
+
+function calculateScore(a,b){
+
+  const normalize = (text)=>
+
+    (text || "")
+      .toLowerCase()
+      .trim()
+
+  let score = 0
+
+  a.forEach((answer,index)=>{
+
+    if(
+      normalize(answer) ===
+      normalize(b[index])
+    ){
+      score += 10
+    }
+  })
+
+  return score
+}
+
+// ======================================
+// TROCAR TELAS
+// ======================================
+
+function show(id){
+
+  document
+    .querySelectorAll(".container > div")
+    .forEach(screen=>
+      screen.classList.add("hidden")
+    )
+
+  document
+    .getElementById(id)
+    .classList.remove("hidden")
+}
+
+// ======================================
+// FRASES
+// ======================================
+
+function showPhrase(mode){
+
+  const list =
+
+    mode === "casal"
+
+      ? couplePhrases
+
+      : friendsPhrases
+
+  document
+    .getElementById("phrase")
+    .innerText =
+
+      list[
+        Math.floor(
+          Math.random() * list.length
+        )
+      ]
 }
