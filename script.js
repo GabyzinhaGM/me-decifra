@@ -203,7 +203,7 @@ async function createRoom(){
 }
 
 // ======================================
-// ENTRAR SALA
+// ENTRAR NA SALA
 // ======================================
 
 async function joinRoom(){
@@ -266,17 +266,24 @@ async function joinRoom(){
 }
 
 // ======================================
-// INICIAR
+// INICIAR JOGO
 // ======================================
 
 async function startQuestions(){
 
-  const { data } =
+  const { data, error } =
     await supabase
       .from("rooms")
       .select("*")
       .eq("code", roomCode)
       .single()
+
+  if(error){
+
+    alert("Erro ao iniciar")
+
+    return
+  }
 
   show("questionsScreen")
 
@@ -288,10 +295,6 @@ async function startQuestions(){
   container.innerHTML = ""
 
   let title = ""
-
-  // ======================================
-  // DEFINIR FASE
-  // ======================================
 
   if(
     !data.player1_answers ||
@@ -331,7 +334,7 @@ async function startQuestions(){
 
     container.innerHTML += `
 
-      <div class="question fade">
+      <div class="question">
 
         <label for="q${index}">
           ${question}
@@ -405,13 +408,13 @@ async function saveAnswers(){
 
   questions.forEach((_,index)=>{
 
-    const value =
+    answers.push(
+
       document
         .getElementById(`q${index}`)
         ?.value || ""
 
-    answers.push(value)
-
+    )
   })
 
   const { data, error } =
@@ -430,9 +433,7 @@ async function saveAnswers(){
 
   let updateData = {}
 
-  // ======================================
   // PLAYER 1 RESPONDE
-  // ======================================
 
   if(
     !data.player1_answers ||
@@ -453,7 +454,7 @@ async function saveAnswers(){
       .eq("code", roomCode)
 
     alert(
-      "✅ Respostas salvas!\nAgora o Jogador 2 responde."
+      "✅ Respostas salvas! Agora o outro jogador responde."
     )
 
     location.reload()
@@ -461,9 +462,7 @@ async function saveAnswers(){
     return
   }
 
-  // ======================================
   // PLAYER 2 RESPONDE
-  // ======================================
 
   if(
     !data.player2_answers ||
@@ -491,9 +490,7 @@ async function saveAnswers(){
     return
   }
 
-  // ======================================
   // PLAYER 1 CHUTA
-  // ======================================
 
   if(
     !data.player1_guesses ||
@@ -519,9 +516,7 @@ async function saveAnswers(){
     return
   }
 
-  // ======================================
   // PLAYER 2 CHUTA
-  // ======================================
 
   updateData = {
 
@@ -662,7 +657,7 @@ async function showResult(){
 
     container.innerHTML += `
 
-      <div class="answer-card fade">
+      <div class="answer-card">
 
         <h3>
           ${question}
@@ -709,16 +704,30 @@ async function showResult(){
 }
 
 // ======================================
-// TROCAR TELA
+// TROCAR TELAS
 // ======================================
 
 function show(id){
 
-  document
-    .querySelectorAll(".container > div")
-    .forEach(screen=>
-      screen.classList.add("hidden")
-    )
+  const screens = [
+
+    "home",
+
+    "waiting",
+
+    "questionsScreen",
+
+    "resultScreen"
+
+  ]
+
+  screens.forEach(screen=>{
+
+    document
+      .getElementById(screen)
+      .classList.add("hidden")
+
+  })
 
   document
     .getElementById(id)
@@ -749,3 +758,9 @@ function showPhrase(mode){
         )
       ]
 }
+
+// ======================================
+// INICIAR HOME
+// ======================================
+
+show("home")
