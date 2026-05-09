@@ -22,42 +22,80 @@
 
   <div class="container">
 
-    <!-- HOME -->
+    <!-- TELA INICIAL -->
+
     <div id="home">
 
-      <h1>
-        Me Decifra 🔥
+      <h1 class="logo">
+        🔥 Me Decifra 🔥
       </h1>
 
-      <p>
-        Descubra quem realmente conhece mais o outro.
+      <p class="subtitle">
+        Descubra quem realmente conhece melhor o outro 😈
       </p>
+
+      <div class="intro-card">
+
+        <h2>
+          🎮 Como jogar
+        </h2>
+
+        <p>
+          1️⃣ Um jogador cria a sala.
+        </p>
+
+        <p>
+          2️⃣ O outro jogador entra usando o código da sala.
+        </p>
+
+        <p>
+          3️⃣ Cada jogador responde perguntas sobre si mesmo.
+        </p>
+
+        <p>
+          4️⃣ Depois vocês tentam adivinhar as respostas um do outro.
+        </p>
+
+        <p>
+          5️⃣ Quem acertar mais respostas vence 🏆
+        </p>
+
+      </div>
+
+      <div class="mode-box">
+
+        <label for="gameMode">
+          Escolha o modo:
+        </label>
+
+        <select id="gameMode">
+
+          <option value="casal">
+            💘 Modo Casal
+          </option>
+
+          <option value="friends">
+            😎 Modo Amigos
+          </option>
+
+        </select>
+
+      </div>
 
       <input
         type="text"
         id="playerName"
         placeholder="Digite seu nome"
-        aria-label="Digite seu nome"
+        aria-label="Nome do jogador"
       >
-
-      <select
-        id="gameMode"
-        aria-label="Modo de jogo"
-      >
-
-        <option value="casal">
-          💘 Modo Casal
-        </option>
-
-        <option value="amigos">
-          😎 Modo Amigos
-        </option>
-
-      </select>
 
       <button onclick="createRoom()">
-        Criar Sala
+        🎮 Criar Sala
       </button>
+
+      <div class="divider">
+        OU
+      </div>
 
       <input
         type="text"
@@ -67,23 +105,24 @@
       >
 
       <button onclick="joinRoom()">
-        Entrar na Sala
+        🚪 Entrar na Sala
       </button>
 
     </div>
 
     <!-- ESPERA -->
+
     <div
       id="waiting"
       class="hidden"
     >
 
       <h1>
-        Sala criada 🎉
+        🎉 Sala criada
       </h1>
 
       <p>
-        Compartilhe este código:
+        Compartilhe este código com quem vai jogar:
       </p>
 
       <div
@@ -91,38 +130,56 @@
         id="roomCode"
       ></div>
 
+      <p class="small">
+        O outro jogador precisa entrar usando esse código 😄
+      </p>
+
       <button onclick="startQuestions()">
-        Começar
+        ▶️ Começar
       </button>
 
     </div>
 
     <!-- PERGUNTAS -->
+
     <div
       id="questionsScreen"
       class="hidden"
     >
 
-      <h2 id="phrase"></h2>
+      <h1 id="phaseTitle">
+        🎯 Perguntas
+      </h1>
 
-      <div id="timer"></div>
+      <p
+        id="phrase"
+        class="phrase"
+      ></p>
+
+      <div
+        id="timer"
+        class="timer"
+      >
+        ⏱️ 20s
+      </div>
 
       <div id="questions"></div>
 
       <button onclick="saveAnswers()">
-        Finalizar respostas
+        ✅ Finalizar respostas
       </button>
 
     </div>
 
     <!-- RESULTADO -->
+
     <div
       id="resultScreen"
       class="hidden"
     >
 
       <h1>
-        Resultado Final 🏆
+        🏆 Resultado Final
       </h1>
 
       <div id="score"></div>
@@ -130,7 +187,7 @@
       <div id="answers"></div>
 
       <button onclick="location.reload()">
-        Jogar novamente
+        🔄 Jogar novamente
       </button>
 
     </div>
@@ -141,22 +198,22 @@
 
   <audio
     id="clickSound"
-    src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3"
+    src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"
   ></audio>
 
   <audio
     id="successSound"
-    src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_270f49b7b1.mp3"
+    src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3"
   ></audio>
 
   <audio
     id="timerSound"
-    src="https://cdn.pixabay.com/download/audio/2022/03/24/audio_85c5d1c9ab.mp3"
+    src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"
   ></audio>
 
   <audio
     id="winSound"
-    src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_401b5c92b4.mp3"
+    src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"
   ></audio>
 
   <!-- SCRIPT -->
@@ -167,5 +224,4 @@
   ></script>
 
 </body>
-
 </html>

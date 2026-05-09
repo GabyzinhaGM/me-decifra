@@ -71,6 +71,7 @@ const friendsPhrases = [
   "👀 Agora ninguém esconde nada!",
 
   "🤝 Testando amizade verdadeira!"
+
 ]
 
 // ======================================
@@ -105,7 +106,7 @@ function play(sound){
 
 let roomCode = ""
 
-let timeLeft = 15
+let timeLeft = 20
 
 let timer
 
@@ -167,13 +168,19 @@ async function createRoom(){
 
         mode: mode,
 
-        player1_name: playerName,
+        phase: "answers",
 
-        player1_answers: [],
+        player1_name: playerName,
 
         player2_name: "",
 
+        player1_answers: [],
+
         player2_answers: [],
+
+        player1_guesses: [],
+
+        player2_guesses: [],
 
         status: "waiting"
 
@@ -196,7 +203,7 @@ async function createRoom(){
 }
 
 // ======================================
-// ENTRAR NA SALA
+// ENTRAR SALA
 // ======================================
 
 async function joinRoom(){
@@ -225,7 +232,7 @@ async function joinRoom(){
 
   if(!roomCode){
 
-    alert("Digite o código da sala")
+    alert("Digite o código")
 
     return
   }
@@ -259,24 +266,17 @@ async function joinRoom(){
 }
 
 // ======================================
-// INICIAR PERGUNTAS
+// INICIAR
 // ======================================
 
 async function startQuestions(){
 
-  const { data, error } =
+  const { data } =
     await supabase
       .from("rooms")
       .select("*")
       .eq("code", roomCode)
       .single()
-
-  if(error){
-
-    alert("Erro ao iniciar jogo")
-
-    return
-  }
 
   show("questionsScreen")
 
@@ -287,11 +287,51 @@ async function startQuestions(){
 
   container.innerHTML = ""
 
+  let title = ""
+
+  // ======================================
+  // DEFINIR FASE
+  // ======================================
+
+  if(
+    !data.player1_answers ||
+    data.player1_answers.length === 0
+  ){
+
+    title =
+      "📝 Responda sobre VOCÊ"
+
+  }else if(
+    !data.player2_answers ||
+    data.player2_answers.length === 0
+  ){
+
+    title =
+      "📝 Responda sobre VOCÊ"
+
+  }else if(
+    !data.player1_guesses ||
+    data.player1_guesses.length === 0
+  ){
+
+    title =
+      `🎯 Tente acertar ${data.player2_name}`
+
+  }else{
+
+    title =
+      `🎯 Tente acertar ${data.player1_name}`
+  }
+
+  document
+    .getElementById("phaseTitle")
+    .innerText = title
+
   questions.forEach((question,index)=>{
 
     container.innerHTML += `
 
-      <div class="question">
+      <div class="question fade">
 
         <label for="q${index}">
           ${question}
@@ -319,7 +359,7 @@ function startTimer(){
 
   clearInterval(timer)
 
-  timeLeft = 15
+  timeLeft = 20
 
   timer = setInterval(()=>{
 
@@ -371,6 +411,7 @@ async function saveAnswers(){
         ?.value || ""
 
     answers.push(value)
+
   })
 
   const { data, error } =
@@ -389,6 +430,10 @@ async function saveAnswers(){
 
   let updateData = {}
 
+  // ======================================
+  // PLAYER 1 RESPONDE
+  // ======================================
+
   if(
     !data.player1_answers ||
     data.player1_answers.length === 0
@@ -396,31 +441,101 @@ async function saveAnswers(){
 
     updateData = {
 
-      player1_answers: answers
+      player1_answers: answers,
+
+      phase: "player2_answers"
+
     }
 
-  }else{
-
-    updateData = {
-
-      player2_answers: answers,
-
-      status: "completed"
-    }
-  }
-
-  const { error:updateError } =
     await supabase
       .from("rooms")
       .update(updateData)
       .eq("code", roomCode)
 
-  if(updateError){
+    alert(
+      "✅ Respostas salvas!\nAgora o Jogador 2 responde."
+    )
 
-    alert("Erro ao atualizar respostas")
+    location.reload()
 
     return
   }
+
+  // ======================================
+  // PLAYER 2 RESPONDE
+  // ======================================
+
+  if(
+    !data.player2_answers ||
+    data.player2_answers.length === 0
+  ){
+
+    updateData = {
+
+      player2_answers: answers,
+
+      phase: "guesses"
+    }
+
+    await supabase
+      .from("rooms")
+      .update(updateData)
+      .eq("code", roomCode)
+
+    alert(
+      "🔥 Agora começa a fase de adivinhação!"
+    )
+
+    location.reload()
+
+    return
+  }
+
+  // ======================================
+  // PLAYER 1 CHUTA
+  // ======================================
+
+  if(
+    !data.player1_guesses ||
+    data.player1_guesses.length === 0
+  ){
+
+    updateData = {
+
+      player1_guesses: answers
+    }
+
+    await supabase
+      .from("rooms")
+      .update(updateData)
+      .eq("code", roomCode)
+
+    alert(
+      "😎 Agora o outro jogador tenta adivinhar!"
+    )
+
+    location.reload()
+
+    return
+  }
+
+  // ======================================
+  // PLAYER 2 CHUTA
+  // ======================================
+
+  updateData = {
+
+    player2_guesses: answers,
+
+    status: "completed",
+
+    phase: "completed"
+  }
+
+  await supabase
+    .from("rooms")
+    .update(updateData)
+    .eq("code", roomCode)
 
   showResult()
 }
@@ -449,47 +564,65 @@ async function showResult(){
 
   play(winSound)
 
-  const p1 =
+  const p1Answers =
     data.player1_answers || []
 
-  const p2 =
+  const p2Answers =
     data.player2_answers || []
 
-  const score1 =
-    calculateScore(p1,p2)
+  const p1Guesses =
+    data.player1_guesses || []
 
-  const score2 =
-    calculateScore(p2,p1)
+  const p2Guesses =
+    data.player2_guesses || []
+
+  let player1Score = 0
+  let player2Score = 0
+
+  const normalize = (text)=>
+
+    (text || "")
+      .toLowerCase()
+      .trim()
+
+  p1Guesses.forEach((guess,index)=>{
+
+    if(
+      normalize(guess) ===
+      normalize(p2Answers[index])
+    ){
+      player1Score += 10
+    }
+
+  })
+
+  p2Guesses.forEach((guess,index)=>{
+
+    if(
+      normalize(guess) ===
+      normalize(p1Answers[index])
+    ){
+      player2Score += 10
+    }
+
+  })
 
   let winner = ""
 
-  if(data.mode === "casal"){
+  if(player1Score > player2Score){
 
     winner =
+      `🏆 ${data.player1_name} venceu!`
 
-      score1 > score2
+  }else if(player2Score > player1Score){
 
-        ? "💘 Você conhece o mozão melhor!"
-
-        : score2 > score1
-
-        ? "🔥 Seu parceiro decorou sua alma!"
-
-        : "😍 Vocês têm conexão perfeita!"
+    winner =
+      `🏆 ${data.player2_name} venceu!`
 
   }else{
 
     winner =
-
-      score1 > score2
-
-        ? "😎 Mestre da amizade!"
-
-        : score2 > score1
-
-        ? "🔥 Seu amigo sabe tudo!"
-
-        : "🤝 Amizade equilibrada!"
+      "🤝 EMPATE!"
   }
 
   document
@@ -499,13 +632,13 @@ async function showResult(){
       <h2>${winner}</h2>
 
       <p>
-        ${data.player1_name || "Jogador 1"}:
-        ${score1} pts
+        ${data.player1_name}:
+        ${player1Score} pontos
       </p>
 
       <p>
-        ${data.player2_name || "Jogador 2"}:
-        ${score2} pts
+        ${data.player2_name}:
+        ${player2Score} pontos
       </p>
 
     `
@@ -517,26 +650,56 @@ async function showResult(){
 
   questions.forEach((question,index)=>{
 
+    const p1Correct =
+
+      normalize(p2Answers[index]) ===
+      normalize(p1Guesses[index])
+
+    const p2Correct =
+
+      normalize(p1Answers[index]) ===
+      normalize(p2Guesses[index])
+
     container.innerHTML += `
 
-      <div class="answer-card">
+      <div class="answer-card fade">
 
         <h3>
           ${question}
         </h3>
 
         <p>
-          ${data.player1_name || "Jogador 1"}:
+          ${data.player1_name} respondeu:
           <strong>
-            ${p1[index] || "-"}
+            ${p1Answers[index] || "-"}
           </strong>
         </p>
 
         <p>
-          ${data.player2_name || "Jogador 2"}:
+          ${data.player2_name} chutou:
           <strong>
-            ${p2[index] || "-"}
+            ${p2Guesses[index] || "-"}
           </strong>
+
+          ${p2Correct ? "✅" : "❌"}
+        </p>
+
+        <hr>
+
+        <p>
+          ${data.player2_name} respondeu:
+          <strong>
+            ${p2Answers[index] || "-"}
+          </strong>
+        </p>
+
+        <p>
+          ${data.player1_name} chutou:
+          <strong>
+            ${p1Guesses[index] || "-"}
+          </strong>
+
+          ${p1Correct ? "✅" : "❌"}
         </p>
 
       </div>
@@ -546,34 +709,7 @@ async function showResult(){
 }
 
 // ======================================
-// PONTUAÇÃO
-// ======================================
-
-function calculateScore(a,b){
-
-  const normalize = (text)=>
-
-    (text || "")
-      .toLowerCase()
-      .trim()
-
-  let score = 0
-
-  a.forEach((answer,index)=>{
-
-    if(
-      normalize(answer) ===
-      normalize(b[index])
-    ){
-      score += 10
-    }
-  })
-
-  return score
-}
-
-// ======================================
-// TROCAR TELAS
+// TROCAR TELA
 // ======================================
 
 function show(id){
