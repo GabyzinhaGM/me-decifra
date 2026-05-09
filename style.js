@@ -7,7 +7,12 @@
 
 body{
 
-  background:#0f172a;
+  background:
+    linear-gradient(
+      135deg,
+      #0f172a,
+      #1e1b4b
+    );
 
   color:white;
 
@@ -26,7 +31,7 @@ body{
 
   width:100%;
 
-  max-width:700px;
+  max-width:750px;
 
   background:#1e293b;
 
@@ -39,17 +44,27 @@ body{
   animation:pop .5s ease;
 }
 
+/* ======================================
+TELAS
+====================================== */
+
 .hidden{
-  display:none;
+  display:none !important;
 }
 
-.title{
+/* ======================================
+TÍTULOS
+====================================== */
+
+.logo{
 
   text-align:center;
 
   margin-bottom:10px;
 
-  font-size:2.5rem;
+  font-size:2.7rem;
+
+  animation:pulse 2s infinite;
 }
 
 .subtitle{
@@ -59,7 +74,61 @@ body{
   margin-bottom:25px;
 
   color:#cbd5e1;
+
+  font-size:1.1rem;
 }
+
+.phrase{
+
+  text-align:center;
+
+  margin-bottom:20px;
+
+  font-size:1.2rem;
+
+  color:#facc15;
+
+  font-weight:bold;
+
+  animation:fade .5s ease;
+}
+
+/* ======================================
+INTRO
+====================================== */
+
+.intro-card{
+
+  background:#334155;
+
+  padding:20px;
+
+  border-radius:18px;
+
+  margin-bottom:25px;
+
+  animation:fade .5s ease;
+}
+
+.intro-card h2{
+
+  margin-bottom:15px;
+
+  text-align:center;
+}
+
+.intro-card p{
+
+  margin-bottom:10px;
+
+  color:#e2e8f0;
+
+  line-height:1.5;
+}
+
+/* ======================================
+INPUTS
+====================================== */
 
 input,
 select{
@@ -75,7 +144,21 @@ select{
   border-radius:12px;
 
   font-size:1rem;
+
+  background:#f8fafc;
+
+  color:#111827;
 }
+
+input:focus,
+select:focus{
+
+  outline:3px solid #7c3aed;
+}
+
+/* ======================================
+BOTÕES
+====================================== */
 
 button{
 
@@ -108,8 +191,13 @@ button:hover{
 }
 
 button:active{
+
   transform:scale(.97);
 }
+
+/* ======================================
+QUESTÕES
+====================================== */
 
 .question{
 
@@ -125,7 +213,13 @@ button:active{
   margin-bottom:8px;
 
   font-weight:bold;
+
+  line-height:1.4;
 }
+
+/* ======================================
+CÓDIGO DA SALA
+====================================== */
 
 .room-code{
 
@@ -146,6 +240,10 @@ button:active{
   animation:pulse 1.5s infinite;
 }
 
+/* ======================================
+TIMER
+====================================== */
+
 .timer{
 
   text-align:center;
@@ -155,7 +253,13 @@ button:active{
   margin-bottom:20px;
 
   color:#22c55e;
+
+  font-weight:bold;
 }
+
+/* ======================================
+RESULTADO
+====================================== */
 
 .answer-card{
 
@@ -166,10 +270,22 @@ button:active{
   border-radius:14px;
 
   margin-top:15px;
+
+  animation:fade .4s ease;
 }
 
 .answer-card h3{
+
   margin-bottom:10px;
+
+  color:#facc15;
+}
+
+.answer-card p{
+
+  margin-top:8px;
+
+  line-height:1.5;
 }
 
 #score{
@@ -184,7 +300,51 @@ button:active{
   margin-bottom:15px;
 
   color:#22c55e;
+
+  font-size:2rem;
 }
+
+/* ======================================
+OUTROS
+====================================== */
+
+.divider{
+
+  text-align:center;
+
+  margin:20px 0;
+
+  color:#cbd5e1;
+
+  font-weight:bold;
+}
+
+.small{
+
+  text-align:center;
+
+  margin-top:15px;
+
+  color:#cbd5e1;
+}
+
+.mode-box{
+
+  margin-bottom:15px;
+}
+
+.mode-box label{
+
+  display:block;
+
+  margin-bottom:8px;
+
+  font-weight:bold;
+}
+
+/* ======================================
+ANIMAÇÕES
+====================================== */
 
 @keyframes fade{
 
@@ -219,10 +379,37 @@ button:active{
   }
 
   50%{
-    transform:scale(1.05);
+    transform:scale(1.03);
   }
 
   100%{
     transform:scale(1);
+  }
+}
+
+/* ======================================
+RESPONSIVO
+====================================== */
+
+@media(max-width:600px){
+
+  .container{
+
+    padding:20px;
+  }
+
+  .logo{
+
+    font-size:2rem;
+  }
+
+  .room-code{
+
+    font-size:1.5rem;
+  }
+
+  .timer{
+
+    font-size:1.5rem;
   }
 }
