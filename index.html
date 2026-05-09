@@ -22,7 +22,7 @@
 
   <div class="container">
 
-    <!-- TELA INICIAL -->
+    <!-- HOME -->
 
     <div id="home">
 
@@ -31,62 +31,57 @@
       </h1>
 
       <p class="subtitle">
-        Descubra quem realmente conhece melhor o outro 😈
+        Descubra quem conhece melhor o outro 😈
       </p>
 
       <div class="intro-card">
 
         <h2>
-          🎮 Como jogar
+          🎮 Como funciona
         </h2>
 
         <p>
-          1️⃣ Um jogador cria a sala.
+          1️⃣ Um jogador cria a sala
         </p>
 
         <p>
-          2️⃣ O outro jogador entra usando o código da sala.
+          2️⃣ O outro entra usando o código
         </p>
 
         <p>
-          3️⃣ Cada jogador responde perguntas sobre si mesmo.
+          3️⃣ Cada um responde sobre si mesmo
         </p>
 
         <p>
-          4️⃣ Depois vocês tentam adivinhar as respostas um do outro.
+          4️⃣ Depois tentam adivinhar as respostas do outro
         </p>
 
         <p>
-          5️⃣ Quem acertar mais respostas vence 🏆
+          5️⃣ Quem acertar mais vence 🏆
         </p>
 
       </div>
 
-      <div class="mode-box">
+      <label>
+        Escolha o modo:
+      </label>
 
-        <label for="gameMode">
-          Escolha o modo:
-        </label>
+      <select id="gameMode">
 
-        <select id="gameMode">
+        <option value="casal">
+          💘 Casal
+        </option>
 
-          <option value="casal">
-            💘 Modo Casal
-          </option>
+        <option value="friends">
+          😎 Amigos
+        </option>
 
-          <option value="friends">
-            😎 Modo Amigos
-          </option>
-
-        </select>
-
-      </div>
+      </select>
 
       <input
         type="text"
         id="playerName"
         placeholder="Digite seu nome"
-        aria-label="Nome do jogador"
       >
 
       <button onclick="createRoom()">
@@ -101,7 +96,6 @@
         type="text"
         id="roomInput"
         placeholder="Digite o código da sala"
-        aria-label="Código da sala"
       >
 
       <button onclick="joinRoom()">
@@ -122,17 +116,13 @@
       </h1>
 
       <p>
-        Compartilhe este código com quem vai jogar:
+        Compartilhe este código:
       </p>
 
       <div
-        class="room-code"
         id="roomCode"
+        class="room-code"
       ></div>
-
-      <p class="small">
-        O outro jogador precisa entrar usando esse código 😄
-      </p>
 
       <button onclick="startQuestions()">
         ▶️ Começar
@@ -216,12 +206,11 @@
     src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"
   ></audio>
 
-  <!-- SCRIPT -->
-
   <script
     type="module"
     src="script.js"
   ></script>
 
 </body>
+
 </html>
