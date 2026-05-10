@@ -33,12 +33,13 @@ const questions = [
 let roomCode = ""
 let playerId = ""
 let roomChannel = null
-let chatChannel = null
-let timer
+
+let timer = null
 let timeLeft = 120
+
 let currentPhase = ""
-let isSaving = false
 let canSave = true
+let isResultShown = false
 
 // ======================================
 // SONS
@@ -56,7 +57,7 @@ function play(sound){
 }
 
 // ======================================
-// EXPOR FUNÇÕES
+// EXPOSE
 // ======================================
 
 window.createRoom = createRoom
@@ -64,7 +65,7 @@ window.joinRoom = joinRoom
 window.saveAnswers = saveAnswers
 
 // ======================================
-// CREATE ROOM (CORRIGIDO)
+// CREATE ROOM
 // ======================================
 
 async function createRoom(){
@@ -81,8 +82,6 @@ async function createRoom(){
 
   roomCode = generateCode().toUpperCase()
   playerId = "player1"
-
-  console.log("CRIANDO SALA:", roomCode)
 
   const { data, error } = await supabase
     .from("rooms")
@@ -103,13 +102,8 @@ async function createRoom(){
     .single()
 
   if(error){
-    console.log("ERRO AO CRIAR SALA:", error)
+    console.log(error)
     alert("Erro ao criar sala")
-    return
-  }
-
-  if(!data){
-    alert("Sala não criada corretamente")
     return
   }
 
@@ -135,13 +129,11 @@ async function joinRoom(){
     return
   }
 
-  console.log("ENTRANDO NA SALA:", roomCode)
-
   const { data, error } = await supabase
     .from("rooms")
     .select("*")
     .eq("code", roomCode)
-    .maybeSingle()
+    .single()
 
   if(error || !data){
     alert("Sala não encontrada")
@@ -155,7 +147,8 @@ async function joinRoom(){
 
   playerId = "player2"
 
-  await supabase.from("rooms")
+  await supabase
+    .from("rooms")
     .update({
       player2_name: name,
       phase: "player1_answers",
@@ -168,7 +161,7 @@ async function joinRoom(){
 }
 
 // ======================================
-// REALTIME ROOM
+// REALTIME
 // ======================================
 
 function subscribeRoom(code){
@@ -189,43 +182,26 @@ function subscribeRoom(code){
       const data = payload.new
       if(!data) return
 
-      handleRoomUpdate(data)
+      if(data.phase !== currentPhase){
+        currentPhase = data.phase
+        handleRoomUpdate(data)
+      }
     })
     .subscribe()
 }
 
 // ======================================
-// CONTROLE DE FASE
+// UI FLOW
 // ======================================
 
 function handleRoomUpdate(data){
-
-  if(data.phase === currentPhase) return
-
-  currentPhase = data.phase
-
-  updateUI(data)
-}
-
-// ======================================
-// UI POR FASE
-// ======================================
-
-function updateUI(data){
 
   if(data.phase === "waiting_player2"){
     show("waiting")
     return
   }
 
-  if(data.phase === "player1_answers" || data.phase === "player2_answers"){
-    show("questionsScreen")
-    renderQuestions(data)
-    startTimer()
-    return
-  }
-
-  if(data.phase === "guessing"){
+  if(data.phase === "player1_answers" || data.phase === "player2_answers" || data.phase === "guessing"){
     show("questionsScreen")
     renderQuestions(data)
     startTimer()
@@ -233,12 +209,12 @@ function updateUI(data){
   }
 
   if(data.phase === "finished"){
-    showResult()
+    showResult(data)
   }
 }
 
 // ======================================
-// RENDER PERGUNTAS
+// RENDER
 // ======================================
 
 function renderQuestions(data){
@@ -246,15 +222,10 @@ function renderQuestions(data){
   const container = document.getElementById("questions")
   container.innerHTML = ""
 
-  let title = ""
-
-  if(data.phase.includes("answers")){
-    title = "📝 Responda sobre você"
-  } else {
-    title = "🎯 Adivinhe as respostas"
-  }
-
-  document.getElementById("phaseTitle").innerText = title
+  document.getElementById("phaseTitle").innerText =
+    data.phase.includes("guessing")
+      ? "🎯 Adivinhe as respostas"
+      : "📝 Responda sobre você"
 
   questions.forEach((q,i)=>{
     container.innerHTML += `
@@ -267,7 +238,7 @@ function renderQuestions(data){
 }
 
 // ======================================
-// TIMER (SEGURO)
+// TIMER
 // ======================================
 
 function startTimer(){
@@ -288,7 +259,7 @@ function startTimer(){
 
     if(timeLeft <= 0){
       clearInterval(timer)
-      alert("Tempo acabou — finalize manualmente")
+      alert("Tempo acabou")
       return
     }
 
@@ -298,7 +269,7 @@ function startTimer(){
 }
 
 // ======================================
-// SALVAR RESPOSTAS (TRAVADO)
+// SAVE
 // ======================================
 
 async function saveAnswers(){
@@ -323,59 +294,61 @@ async function saveAnswers(){
     return
   }
 
-  if(data.phase === "player1_answers"){
-
-    await supabase.from("rooms")
-      .update({
-        player1_answers: answers,
-        phase: "player2_answers",
-        current_turn: "player2"
-      })
+  const update = async (payload) => {
+    await supabase
+      .from("rooms")
+      .update(payload)
       .eq("code", roomCode)
+  }
+
+  if(data.phase === "player1_answers"){
+    await update({
+      player1_answers: answers,
+      phase: "player2_answers",
+      current_turn: "player2"
+    })
   }
 
   if(data.phase === "player2_answers"){
-
-    await supabase.from("rooms")
-      .update({
-        player2_answers: answers,
-        phase: "guessing",
-        current_turn: "player1"
-      })
-      .eq("code", roomCode)
+    await update({
+      player2_answers: answers,
+      phase: "guessing",
+      current_turn: "player1"
+    })
   }
 
   if(data.phase === "guessing"){
-
-    await supabase.from("rooms")
-      .update({
-        player1_guesses: answers,
-        phase: "finished",
-        status: "completed"
-      })
-      .eq("code", roomCode)
-
-    showResult()
+    await update({
+      player1_guesses: answers,
+      phase: "finished",
+      status: "completed"
+    })
   }
 
   canSave = true
 }
 
 // ======================================
-// RESULTADO
+// RESULT
 // ======================================
 
-async function showResult(){
+async function showResult(data = null){
 
-  const { data } = await supabase
-    .from("rooms")
-    .select("*")
-    .eq("code", roomCode)
-    .single()
+  if(isResultShown) return
+  isResultShown = true
 
-  show("resultScreen")
+  if(!data){
+    const res = await supabase
+      .from("rooms")
+      .select("*")
+      .eq("code", roomCode)
+      .single()
+
+    data = res.data
+  }
 
   play(winSound)
+  show("resultScreen")
 
   let p1 = 0
   let p2 = 0
@@ -383,11 +356,11 @@ async function showResult(){
   const norm = t => (t || "").toLowerCase().trim()
 
   data.player1_guesses?.forEach((g,i)=>{
-    if(norm(g) === norm(data.player2_answers[i])) p1 += 10
+    if(norm(g) === norm(data.player2_answers?.[i])) p1 += 10
   })
 
   data.player2_guesses?.forEach((g,i)=>{
-    if(norm(g) === norm(data.player1_answers[i])) p2 += 10
+    if(norm(g) === norm(data.player1_answers?.[i])) p2 += 10
   })
 
   document.getElementById("score").innerHTML = `
