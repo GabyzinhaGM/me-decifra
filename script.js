@@ -33,10 +33,8 @@ const questions = [
 let roomCode = ""
 let playerId = ""
 let roomChannel = null
-
 let timer = null
 let timeLeft = 120
-
 let currentPhase = ""
 let canSave = true
 let isResultShown = false
@@ -47,7 +45,6 @@ let isResultShown = false
 
 const clickSound = document.getElementById("clickSound")
 const successSound = document.getElementById("successSound")
-const timerSound = document.getElementById("timerSound")
 const winSound = document.getElementById("winSound")
 
 function play(sound){
@@ -57,7 +54,7 @@ function play(sound){
 }
 
 // ======================================
-// EXPOSE
+// EXPOR FUNÇÕES
 // ======================================
 
 window.createRoom = createRoom
@@ -65,7 +62,7 @@ window.joinRoom = joinRoom
 window.saveAnswers = saveAnswers
 
 // ======================================
-// CREATE ROOM
+// CRIAR SALA
 // ======================================
 
 async function createRoom(){
@@ -82,6 +79,8 @@ async function createRoom(){
 
   roomCode = generateCode().toUpperCase()
   playerId = "player1"
+
+  console.log("ROOM CODE:", roomCode)
 
   const { data, error } = await supabase
     .from("rooms")
@@ -102,19 +101,19 @@ async function createRoom(){
     .single()
 
   if(error){
-    console.log(error)
-    alert("Erro ao criar sala")
+    console.error(error)
+    alert("Erro ao criar sala: " + error.message)
     return
   }
 
   subscribeRoom(roomCode)
-
   show("waiting")
+
   document.getElementById("roomCode").innerText = roomCode
 }
 
 // ======================================
-// JOIN ROOM
+// ENTRAR NA SALA
 // ======================================
 
 async function joinRoom(){
@@ -184,24 +183,28 @@ function subscribeRoom(code){
 
       if(data.phase !== currentPhase){
         currentPhase = data.phase
-        handleRoomUpdate(data)
+        handleRoom(data)
       }
     })
     .subscribe()
 }
 
 // ======================================
-// UI FLOW
+// FLUXO
 // ======================================
 
-function handleRoomUpdate(data){
+function handleRoom(data){
 
   if(data.phase === "waiting_player2"){
     show("waiting")
     return
   }
 
-  if(data.phase === "player1_answers" || data.phase === "player2_answers" || data.phase === "guessing"){
+  if(
+    data.phase === "player1_answers" ||
+    data.phase === "player2_answers" ||
+    data.phase === "guessing"
+  ){
     show("questionsScreen")
     renderQuestions(data)
     startTimer()
@@ -209,12 +212,12 @@ function handleRoomUpdate(data){
   }
 
   if(data.phase === "finished"){
-    showResult(data)
+    showResult()
   }
 }
 
 // ======================================
-// RENDER
+// PERGUNTAS
 // ======================================
 
 function renderQuestions(data){
@@ -269,7 +272,7 @@ function startTimer(){
 }
 
 // ======================================
-// SAVE
+// SALVAR
 // ======================================
 
 async function saveAnswers(){
@@ -288,11 +291,6 @@ async function saveAnswers(){
     .select("*")
     .eq("code", roomCode)
     .single()
-
-  if(!data){
-    canSave = true
-    return
-  }
 
   const update = async (payload) => {
     await supabase
@@ -329,23 +327,19 @@ async function saveAnswers(){
 }
 
 // ======================================
-// RESULT
+// RESULTADO
 // ======================================
 
-async function showResult(data = null){
+async function showResult(){
 
   if(isResultShown) return
   isResultShown = true
 
-  if(!data){
-    const res = await supabase
-      .from("rooms")
-      .select("*")
-      .eq("code", roomCode)
-      .single()
-
-    data = res.data
-  }
+  const { data } = await supabase
+    .from("rooms")
+    .select("*")
+    .eq("code", roomCode)
+    .single()
 
   play(winSound)
   show("resultScreen")
@@ -364,9 +358,7 @@ async function showResult(data = null){
   })
 
   document.getElementById("score").innerHTML = `
-    <h2>
-      ${p1 > p2 ? data.player1_name : p2 > p1 ? data.player2_name : "Empate"}
-    </h2>
+    <h2>${p1 > p2 ? data.player1_name : p2 > p1 ? data.player2_name : "Empate"}</h2>
     <p>${data.player1_name}: ${p1}</p>
     <p>${data.player2_name}: ${p2}</p>
   `
