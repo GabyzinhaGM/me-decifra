@@ -252,9 +252,23 @@ TIMER
 
   margin-bottom:20px;
 
+  font-weight:bold;
+
   color:#22c55e;
 
-  font-weight:bold;
+  transition:all .3s ease;
+}
+
+/* ⚠️ ALERTA (30s) */
+.timer.warning{
+  color:#facc15;
+  transform:scale(1.05);
+}
+
+/* 🚨 CRÍTICO (10s) */
+.timer.danger{
+  color:#ef4444;
+  animation:pulse 0.8s infinite;
 }
 
 /* ======================================
@@ -394,22 +408,18 @@ RESPONSIVO
 @media(max-width:600px){
 
   .container{
-
     padding:20px;
   }
 
   .logo{
-
     font-size:2rem;
   }
 
   .room-code{
-
     font-size:1.5rem;
   }
 
   .timer{
-
     font-size:1.5rem;
   }
 }

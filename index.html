@@ -40,25 +40,11 @@
           🎮 Como funciona
         </h2>
 
-        <p>
-          1️⃣ Um jogador cria a sala
-        </p>
-
-        <p>
-          2️⃣ O outro entra usando o código
-        </p>
-
-        <p>
-          3️⃣ Cada um responde sobre si mesmo
-        </p>
-
-        <p>
-          4️⃣ Depois tentam adivinhar as respostas do outro
-        </p>
-
-        <p>
-          5️⃣ Quem acertar mais vence 🏆
-        </p>
+        <p>1️⃣ Um jogador cria a sala</p>
+        <p>2️⃣ O outro entra usando o código</p>
+        <p>3️⃣ Cada um responde sobre si mesmo</p>
+        <p>4️⃣ Depois tentam adivinhar as respostas do outro</p>
+        <p>5️⃣ Quem acertar mais vence 🏆</p>
 
       </div>
 
@@ -111,13 +97,9 @@
       class="hidden"
     >
 
-      <h1>
-        🎉 Sala criada
-      </h1>
+      <h1>🎉 Sala criada</h1>
 
-      <p>
-        Compartilhe este código:
-      </p>
+      <p>Compartilhe este código:</p>
 
       <div
         id="roomCode"
@@ -146,12 +128,22 @@
         class="phrase"
       ></p>
 
+      <!-- 🔥 TIMER (MELHORADO PRA ACESSIBILIDADE) -->
       <div
         id="timer"
         class="timer"
+        aria-live="polite"
+        aria-atomic="true"
       >
-        ⏱️ 20s
+        ⏱️ 2:00
       </div>
+
+      <!-- aviso acessível separado -->
+      <div
+        id="timerAnnouncement"
+        aria-live="assertive"
+        style="position:absolute; left:-9999px;"
+      ></div>
 
       <div id="questions"></div>
 
@@ -168,9 +160,7 @@
       class="hidden"
     >
 
-      <h1>
-        🏆 Resultado Final
-      </h1>
+      <h1>🏆 Resultado Final</h1>
 
       <div id="score"></div>
 
@@ -186,25 +176,17 @@
 
   <!-- SONS -->
 
-  <audio
-    id="clickSound"
-    src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"
-  ></audio>
+  <audio id="clickSound"
+    src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
 
-  <audio
-    id="successSound"
-    src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3"
-  ></audio>
+  <audio id="successSound"
+    src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3"></audio>
 
-  <audio
-    id="timerSound"
-    src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"
-  ></audio>
+  <audio id="timerSound"
+    src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
-  <audio
-    id="winSound"
-    src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"
-  ></audio>
+  <audio id="winSound"
+    src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
 
   <script
     type="module"

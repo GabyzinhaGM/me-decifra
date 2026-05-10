@@ -13,37 +13,23 @@ const SUPABASE_KEY =
   "sb_publishable_qu5Ut2JmpKFecim5QqIz5g_GBYJLq-N"
 
 const supabase =
-  createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  )
+  createClient(SUPABASE_URL, SUPABASE_KEY)
 
 // ======================================
 // PERGUNTAS
 // ======================================
 
 const questions = [
-
   "Qual é minha comida favorita?",
-
   "Qual é meu maior sonho?",
-
   "Qual é minha maior qualidade?",
-
   "Qual é meu maior defeito?",
-
   "Qual é meu hobby favorito?",
-
   "Qual é minha cor favorita?",
-
   "Qual aplicativo eu mais uso?",
-
   "Qual é meu maior medo?",
-
   "Qual é meu filme favorito?",
-
   "Qual é meu doce favorito?"
-
 ]
 
 // ======================================
@@ -51,53 +37,32 @@ const questions = [
 // ======================================
 
 const couplePhrases = [
-
   "💘 O amor vai sobreviver?",
-
   "🔥 Quem conhece melhor o mozão?",
-
   "😍 Hora da verdade do casal!",
-
   "💞 Será que vocês têm conexão perfeita?"
-
 ]
 
 const friendsPhrases = [
-
   "😎 Amizade forte ou fake?",
-
   "🔥 Quem conhece mais o amigo?",
-
   "👀 Agora ninguém esconde nada!",
-
   "🤝 Testando amizade verdadeira!"
-
 ]
 
 // ======================================
 // SONS
 // ======================================
 
-const clickSound =
-  document.getElementById("clickSound")
-
-const successSound =
-  document.getElementById("successSound")
-
-const timerSound =
-  document.getElementById("timerSound")
-
-const winSound =
-  document.getElementById("winSound")
+const clickSound = document.getElementById("clickSound")
+const successSound = document.getElementById("successSound")
+const timerSound = document.getElementById("timerSound")
+const winSound = document.getElementById("winSound")
 
 function play(sound){
-
   if(!sound) return
-
   sound.currentTime = 0
-
-  sound.play()
-    .catch(()=>{})
+  sound.play().catch(()=>{})
 }
 
 // ======================================
@@ -105,9 +70,7 @@ function play(sound){
 // ======================================
 
 let roomCode = ""
-
-let timeLeft = 20
-
+let timeLeft = 120
 let timer
 
 // ======================================
@@ -124,7 +87,6 @@ window.saveAnswers = saveAnswers
 // ======================================
 
 function generateCode(){
-
   return Math.random()
     .toString(36)
     .substring(2,8)
@@ -140,66 +102,40 @@ async function createRoom(){
   play(clickSound)
 
   const playerName =
-    document
-      .getElementById("playerName")
-      .value
-      .trim()
+    document.getElementById("playerName").value.trim()
 
   const mode =
-    document
-      .getElementById("gameMode")
-      .value
+    document.getElementById("gameMode").value
 
   if(!playerName){
-
     alert("Digite seu nome")
-
     return
   }
 
   roomCode = generateCode()
 
   const { error } =
-    await supabase
-      .from("rooms")
-      .insert([{
-
-        code: roomCode,
-
-        mode: mode,
-
-        phase: "answers",
-
-        player1_name: playerName,
-
-        player2_name: "",
-
-        player1_answers: [],
-
-        player2_answers: [],
-
-        player1_guesses: [],
-
-        player2_guesses: [],
-
-        status: "waiting"
-
-      }])
+    await supabase.from("rooms").insert([{
+      code: roomCode,
+      mode,
+      phase: "waiting",
+      player1_name: playerName,
+      player2_name: "",
+      player1_answers: [],
+      player2_answers: [],
+      player1_guesses: [],
+      player2_guesses: [],
+      status: "waiting"
+    }])
 
   if(error){
-
-    console.log(error)
-
     alert("Erro ao criar sala")
-
     return
   }
 
   show("waiting")
 
-  document
-    .getElementById("roomCode")
-    .innerText = roomCode
+  document.getElementById("roomCode").innerText = roomCode
 }
 
 // ======================================
@@ -211,54 +147,37 @@ async function joinRoom(){
   play(clickSound)
 
   const playerName =
-    document
-      .getElementById("playerName")
-      .value
-      .trim()
+    document.getElementById("playerName").value.trim()
 
   roomCode =
-    document
-      .getElementById("roomInput")
-      .value
-      .trim()
-      .toUpperCase()
+    document.getElementById("roomInput").value.trim().toUpperCase()
 
   if(!playerName){
-
     alert("Digite seu nome")
-
     return
   }
 
   if(!roomCode){
-
     alert("Digite o código")
-
     return
   }
 
   const { data, error } =
-    await supabase
-      .from("rooms")
+    await supabase.from("rooms")
       .select("*")
       .eq("code", roomCode)
       .single()
 
   if(error || !data){
-
     alert("Sala não encontrada")
-
     return
   }
 
-  await supabase
-    .from("rooms")
+  await supabase.from("rooms")
     .update({
-
       player2_name: playerName,
-
-      status: "playing"
-
+      status: "playing",
+      phase: "player1_answers"
     })
     .eq("code", roomCode)
 
@@ -272,16 +191,13 @@ async function joinRoom(){
 async function startQuestions(){
 
   const { data, error } =
-    await supabase
-      .from("rooms")
+    await supabase.from("rooms")
       .select("*")
       .eq("code", roomCode)
       .single()
 
   if(error){
-
     alert("Erro ao iniciar")
-
     return
   }
 
@@ -296,58 +212,30 @@ async function startQuestions(){
 
   let title = ""
 
-  if(
-    !data.player1_answers ||
-    data.player1_answers.length === 0
-  ){
+  switch(data.phase){
 
-    title =
-      "📝 Responda sobre VOCÊ"
+    case "player1_answers":
+    case "player2_answers":
+      title = "📝 Responda sobre VOCÊ"
+      break
 
-  }else if(
-    !data.player2_answers ||
-    data.player2_answers.length === 0
-  ){
+    case "guessing":
+      title = "🎯 Hora de adivinhar!"
+      break
 
-    title =
-      "📝 Responda sobre VOCÊ"
-
-  }else if(
-    !data.player1_guesses ||
-    data.player1_guesses.length === 0
-  ){
-
-    title =
-      `🎯 Tente acertar ${data.player2_name}`
-
-  }else{
-
-    title =
-      `🎯 Tente acertar ${data.player1_name}`
+    case "finished":
+      title = "🏆 Jogo finalizado"
+      break
   }
 
-  document
-    .getElementById("phaseTitle")
-    .innerText = title
+  document.getElementById("phaseTitle").innerText = title
 
-  questions.forEach((question,index)=>{
-
+  questions.forEach((q,i)=>{
     container.innerHTML += `
-
       <div class="question">
-
-        <label for="q${index}">
-          ${question}
-        </label>
-
-        <input
-          id="q${index}"
-          type="text"
-          aria-label="${question}"
-        >
-
+        <label for="q${i}">${q}</label>
+        <input id="q${i}" type="text">
       </div>
-
     `
   })
 
@@ -362,7 +250,7 @@ function startTimer(){
 
   clearInterval(timer)
 
-  timeLeft = 20
+  timeLeft = 120
 
   timer = setInterval(()=>{
 
@@ -371,21 +259,20 @@ function startTimer(){
 
     if(timerEl){
 
+      const m = Math.floor(timeLeft / 60)
+      const s = timeLeft % 60
+
       timerEl.innerText =
-        `⏱️ ${timeLeft}s`
+        `⏱️ ${m}:${s < 10 ? "0" : ""}${s}`
     }
 
-    if(timeLeft <= 3){
-
+    if(timeLeft <= 10){
       play(timerSound)
-
-      navigator.vibrate?.(200)
+      navigator.vibrate?.(150)
     }
 
     if(timeLeft <= 0){
-
       clearInterval(timer)
-
       saveAnswers()
     }
 
@@ -395,144 +282,74 @@ function startTimer(){
 }
 
 // ======================================
-// SALVAR
+// SALVAR RESPOSTAS (FLUXO CORRETO)
 // ======================================
 
 async function saveAnswers(){
 
   clearInterval(timer)
-
   play(successSound)
 
   const answers = []
 
-  questions.forEach((_,index)=>{
-
+  questions.forEach((_,i)=>{
     answers.push(
-
-      document
-        .getElementById(`q${index}`)
-        ?.value || ""
-
+      document.getElementById(`q${i}`)?.value || ""
     )
   })
 
-  const { data, error } =
-    await supabase
-      .from("rooms")
+  const { data } =
+    await supabase.from("rooms")
       .select("*")
       .eq("code", roomCode)
       .single()
 
-  if(error){
-
-    alert("Erro ao salvar")
-
-    return
-  }
-
   let updateData = {}
 
-  // PLAYER 1 RESPONDE
-
-  if(
-    !data.player1_answers ||
-    data.player1_answers.length === 0
-  ){
+  if(data.phase === "player1_answers"){
 
     updateData = {
-
       player1_answers: answers,
-
       phase: "player2_answers"
-
     }
 
-    await supabase
-      .from("rooms")
+    await supabase.from("rooms")
       .update(updateData)
       .eq("code", roomCode)
 
-    alert(
-      "✅ Respostas salvas! Agora o outro jogador responde."
-    )
-
     location.reload()
-
     return
   }
 
-  // PLAYER 2 RESPONDE
-
-  if(
-    !data.player2_answers ||
-    data.player2_answers.length === 0
-  ){
+  if(data.phase === "player2_answers"){
 
     updateData = {
-
       player2_answers: answers,
-
-      phase: "guesses"
+      phase: "guessing"
     }
 
-    await supabase
-      .from("rooms")
+    await supabase.from("rooms")
       .update(updateData)
       .eq("code", roomCode)
 
-    alert(
-      "🔥 Agora começa a fase de adivinhação!"
-    )
-
     location.reload()
-
     return
   }
 
-  // PLAYER 1 CHUTA
-
-  if(
-    !data.player1_guesses ||
-    data.player1_guesses.length === 0
-  ){
+  if(data.phase === "guessing"){
 
     updateData = {
-
-      player1_guesses: answers
+      player1_guesses: answers,
+      phase: "finished",
+      status: "completed"
     }
 
-    await supabase
-      .from("rooms")
+    await supabase.from("rooms")
       .update(updateData)
       .eq("code", roomCode)
 
-    alert(
-      "😎 Agora o outro jogador tenta adivinhar!"
-    )
-
-    location.reload()
-
-    return
+    showResult()
   }
-
-  // PLAYER 2 CHUTA
-
-  updateData = {
-
-    player2_guesses: answers,
-
-    status: "completed",
-
-    phase: "completed"
-  }
-
-  await supabase
-    .from("rooms")
-    .update(updateData)
-    .eq("code", roomCode)
-
-  showResult()
 }
 
 // ======================================
@@ -541,197 +358,52 @@ async function saveAnswers(){
 
 async function showResult(){
 
-  const { data, error } =
-    await supabase
-      .from("rooms")
+  const { data } =
+    await supabase.from("rooms")
       .select("*")
       .eq("code", roomCode)
       .single()
-
-  if(error){
-
-    alert("Erro ao carregar resultado")
-
-    return
-  }
 
   show("resultScreen")
 
   play(winSound)
 
-  const p1Answers =
-    data.player1_answers || []
+  let p1 = 0
+  let p2 = 0
 
-  const p2Answers =
-    data.player2_answers || []
+  const norm = t =>
+    (t || "").toLowerCase().trim()
 
-  const p1Guesses =
-    data.player1_guesses || []
-
-  const p2Guesses =
-    data.player2_guesses || []
-
-  let player1Score = 0
-  let player2Score = 0
-
-  const normalize = (text)=>
-
-    (text || "")
-      .toLowerCase()
-      .trim()
-
-  p1Guesses.forEach((guess,index)=>{
-
-    if(
-      normalize(guess) ===
-      normalize(p2Answers[index])
-    ){
-      player1Score += 10
+  data.player1_guesses?.forEach((g,i)=>{
+    if(norm(g) === norm(data.player2_answers[i])){
+      p1 += 10
     }
-
   })
 
-  p2Guesses.forEach((guess,index)=>{
-
-    if(
-      normalize(guess) ===
-      normalize(p1Answers[index])
-    ){
-      player2Score += 10
+  data.player2_guesses?.forEach((g,i)=>{
+    if(norm(g) === norm(data.player1_answers[i])){
+      p2 += 10
     }
-
   })
 
-  let winner = ""
-
-  if(player1Score > player2Score){
-
-    winner =
-      `🏆 ${data.player1_name} venceu!`
-
-  }else if(player2Score > player1Score){
-
-    winner =
-      `🏆 ${data.player2_name} venceu!`
-
-  }else{
-
-    winner =
-      "🤝 EMPATE!"
-  }
-
-  document
-    .getElementById("score")
-    .innerHTML = `
-
-      <h2>${winner}</h2>
-
-      <p>
-        ${data.player1_name}:
-        ${player1Score} pontos
-      </p>
-
-      <p>
-        ${data.player2_name}:
-        ${player2Score} pontos
-      </p>
-
-    `
-
-  const container =
-    document.getElementById("answers")
-
-  container.innerHTML = ""
-
-  questions.forEach((question,index)=>{
-
-    const p1Correct =
-
-      normalize(p2Answers[index]) ===
-      normalize(p1Guesses[index])
-
-    const p2Correct =
-
-      normalize(p1Answers[index]) ===
-      normalize(p2Guesses[index])
-
-    container.innerHTML += `
-
-      <div class="answer-card">
-
-        <h3>
-          ${question}
-        </h3>
-
-        <p>
-          ${data.player1_name} respondeu:
-          <strong>
-            ${p1Answers[index] || "-"}
-          </strong>
-        </p>
-
-        <p>
-          ${data.player2_name} chutou:
-          <strong>
-            ${p2Guesses[index] || "-"}
-          </strong>
-
-          ${p2Correct ? "✅" : "❌"}
-        </p>
-
-        <hr>
-
-        <p>
-          ${data.player2_name} respondeu:
-          <strong>
-            ${p2Answers[index] || "-"}
-          </strong>
-        </p>
-
-        <p>
-          ${data.player1_name} chutou:
-          <strong>
-            ${p1Guesses[index] || "-"}
-          </strong>
-
-          ${p1Correct ? "✅" : "❌"}
-        </p>
-
-      </div>
-
-    `
-  })
+  document.getElementById("score").innerHTML = `
+    <h2>${p1 > p2 ? data.player1_name : p2 > p1 ? data.player2_name : "Empate!"}</h2>
+    <p>${data.player1_name}: ${p1}</p>
+    <p>${data.player2_name}: ${p2}</p>
+  `
 }
 
 // ======================================
-// TROCAR TELAS
+// UI
 // ======================================
 
 function show(id){
+  ["home","waiting","questionsScreen","resultScreen"]
+    .forEach(s=>{
+      document.getElementById(s).classList.add("hidden")
+    })
 
-  const screens = [
-
-    "home",
-
-    "waiting",
-
-    "questionsScreen",
-
-    "resultScreen"
-
-  ]
-
-  screens.forEach(screen=>{
-
-    document
-      .getElementById(screen)
-      .classList.add("hidden")
-
-  })
-
-  document
-    .getElementById(id)
-    .classList.remove("hidden")
+  document.getElementById(id).classList.remove("hidden")
 }
 
 // ======================================
@@ -741,26 +413,16 @@ function show(id){
 function showPhrase(mode){
 
   const list =
-
     mode === "casal"
-
       ? couplePhrases
-
       : friendsPhrases
 
-  document
-    .getElementById("phrase")
-    .innerText =
-
-      list[
-        Math.floor(
-          Math.random() * list.length
-        )
-      ]
+  document.getElementById("phrase").innerText =
+    list[Math.floor(Math.random()*list.length)]
 }
 
 // ======================================
-// INICIAR HOME
+// START
 // ======================================
 
 show("home")
