@@ -1,17 +1,102 @@
-<div id="waiting" class="hidden">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
 
-  <h1 class="logo">💘 Conexão ou Caos</h1>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <p class="subtitle">
-    Compartilhe este código com o outro jogador
-  </p>
+<title>Conexão ou Caos</title>
 
-  <div class="room-code" id="roomCode">
-    ------
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- HOME -->
+  <div id="home">
+
+    <h1 class="logo">💘 Conexão ou Caos</h1>
+
+    <p class="subtitle">
+      Descubra o quanto vocês se conhecem
+    </p>
+
+    <input
+      id="playerName"
+      type="text"
+      placeholder="Seu nome"
+    />
+
+    <button onclick="createRoom()">
+      Criar Sala
+    </button>
+
+    <div class="divider">OU</div>
+
+    <input
+      id="roomInput"
+      type="text"
+      placeholder="Código da sala"
+    />
+
+    <button onclick="joinRoom()">
+      Entrar na Sala
+    </button>
+
   </div>
 
-  <p class="small">
-    Espere o outro jogador entrar...
-  </p>
+  <!-- WAITING -->
+  <div id="waiting" class="hidden">
+
+    <h1 class="logo">💘 Conexão ou Caos</h1>
+
+    <p class="subtitle">
+      Compartilhe este código
+    </p>
+
+    <div class="room-code" id="roomCode">
+      ------
+    </div>
+
+    <p class="small">
+      Espere o outro jogador entrar...
+    </p>
+
+  </div>
+
+  <!-- QUESTIONS -->
+  <div id="questionsScreen" class="hidden">
+
+    <div class="timer" id="timer">
+      ⏱️ 2:00
+    </div>
+
+    <h2
+      id="phaseTitle"
+      style="margin-bottom:20px;text-align:center;"
+    ></h2>
+
+    <div id="questions"></div>
+
+    <button onclick="saveAnswers()">
+      Enviar Respostas
+    </button>
+
+  </div>
+
+  <!-- RESULT -->
+  <div id="resultScreen" class="hidden">
+
+    <div id="score"></div>
+
+  </div>
 
 </div>
+
+<script type="module" src="script.js"></script>
+
+</body>
+</html>
