@@ -59,11 +59,10 @@ function play(sound){
 
 window.createRoom = createRoom
 window.joinRoom = joinRoom
-window.startGame = startGame
 window.saveAnswers = saveAnswers
 
 // ======================================
-// REALTIME (TEMPO REAL)
+// REALTIME
 // ======================================
 
 function subscribeRoom(code){
@@ -74,36 +73,60 @@ function subscribeRoom(code){
 
   roomChannel = supabase
     .channel(`room:${code}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "rooms",
-        filter: `code=eq.${code}`
-      },
-      (payload) => {
-        const data = payload.new
-        if(!data) return
-        handleRoomUpdate(data)
-      }
-    )
+    .on("postgres_changes", {
+      event: "*",
+      schema: "public",
+      table: "rooms",
+      filter: `code=eq.${code}`
+    }, (payload) => {
+      const data = payload.new
+      if(!data) return
+
+      handleRoomUpdate(data)
+    })
     .subscribe()
 }
 
 // ======================================
-// UPDATE EM TEMPO REAL
+// CONTROLE DE ESTADO
 // ======================================
 
 function handleRoomUpdate(data){
 
+  // evita loop infinito
   if(data.phase !== currentPhase){
     currentPhase = data.phase
-    startGame(data)
+    updateUI(data)
   }
 
   if(data.phase === "finished"){
     showResult()
+  }
+}
+
+// ======================================
+// UI POR FASE (NOVA LÓGICA)
+// ======================================
+
+function updateUI(data){
+
+  if(data.phase === "waiting_player2"){
+    show("waiting")
+    document.getElementById("roomCode").innerText = roomCode
+    return
+  }
+
+  if(data.phase === "player1_answers" || data.phase === "player2_answers"){
+    show("questionsScreen")
+    renderQuestions(data)
+    startTimer()
+    return
+  }
+
+  if(data.phase === "guessing"){
+    show("questionsScreen")
+    renderQuestions(data)
+    startTimer()
   }
 }
 
@@ -126,10 +149,7 @@ async function createRoom(){
   const name = document.getElementById("playerName").value.trim()
   const mode = document.getElementById("gameMode").value
 
-  if(!name){
-    alert("Digite seu nome")
-    return
-  }
+  if(!name) return alert("Digite seu nome")
 
   roomCode = generateCode()
   playerId = "player1"
@@ -137,7 +157,7 @@ async function createRoom(){
   await supabase.from("rooms").insert([{
     code: roomCode,
     mode,
-    phase: "player1_answers",
+    phase: "waiting_player2",
     current_turn: "player1",
     player1_name: name,
     player2_name: "",
@@ -148,10 +168,8 @@ async function createRoom(){
     status: "waiting"
   }])
 
-  show("waiting")
-  document.getElementById("roomCode").innerText = roomCode
-
   subscribeRoom(roomCode)
+  show("waiting")
 }
 
 // ======================================
@@ -165,10 +183,7 @@ async function joinRoom(){
   const name = document.getElementById("playerName").value.trim()
   roomCode = document.getElementById("roomInput").value.trim().toUpperCase()
 
-  if(!name){
-    alert("Digite seu nome")
-    return
-  }
+  if(!name) return alert("Digite seu nome")
 
   const { data } = await supabase
     .from("rooms")
@@ -176,45 +191,25 @@ async function joinRoom(){
     .eq("code", roomCode)
     .single()
 
-  if(!data){
-    alert("Sala não encontrada")
-    return
-  }
-
-  if(data.player2_name){
-    alert("Sala cheia")
-    return
-  }
+  if(!data) return alert("Sala não encontrada")
+  if(data.player2_name) return alert("Sala cheia")
 
   playerId = "player2"
 
   await supabase.from("rooms")
     .update({
       player2_name: name,
-      phase: "player1_answers",
+      phase: "player1_answers", // 🔥 só começa quando 2 players entram
       current_turn: "player1",
       status: "playing"
     })
     .eq("code", roomCode)
 
   subscribeRoom(roomCode)
-  startGame(data)
 }
 
 // ======================================
-// INICIAR JOGO
-// ======================================
-
-function startGame(data){
-
-  show("questionsScreen")
-
-  renderQuestions(data)
-  startTimer(data)
-}
-
-// ======================================
-// RENDER
+// RENDER PERGUNTAS
 // ======================================
 
 function renderQuestions(data){
@@ -224,12 +219,12 @@ function renderQuestions(data){
 
   let title = ""
 
-  if(data.phase === "player1_answers" || data.phase === "player2_answers"){
+  if(data.phase.includes("answers")){
     title = "📝 Responda sobre você"
   }
 
   if(data.phase === "guessing"){
-    title = "🎯 Hora de adivinhar!"
+    title = "🎯 Agora adivinhe!"
   }
 
   document.getElementById("phaseTitle").innerText = title
@@ -245,10 +240,10 @@ function renderQuestions(data){
 }
 
 // ======================================
-// TIMER SINCRONIZADO
+// TIMER SIMPLES
 // ======================================
 
-function startTimer(data){
+function startTimer(){
 
   clearInterval(timer)
   timeLeft = 120
@@ -257,14 +252,11 @@ function startTimer(data){
 
     const el = document.getElementById("timer")
 
-    if(el){
-      const m = Math.floor(timeLeft / 60)
-      const s = timeLeft % 60
-      el.innerText = `⏱️ ${m}:${s < 10 ? "0" : ""}${s}`
-    }
+    const m = Math.floor(timeLeft / 60)
+    const s = timeLeft % 60
 
-    if(timeLeft <= 10){
-      play(timerSound)
+    if(el){
+      el.innerText = `⏱️ ${m}:${s < 10 ? "0" : ""}${s}`
     }
 
     if(timeLeft <= 0){
@@ -303,6 +295,7 @@ async function saveAnswers(){
     return
   }
 
+  // PLAYER 1
   if(data.phase === "player1_answers"){
 
     await supabase.from("rooms")
@@ -314,6 +307,7 @@ async function saveAnswers(){
       .eq("code", roomCode)
   }
 
+  // PLAYER 2
   if(data.phase === "player2_answers"){
 
     await supabase.from("rooms")
@@ -325,6 +319,7 @@ async function saveAnswers(){
       .eq("code", roomCode)
   }
 
+  // GUESSING
   if(data.phase === "guessing"){
 
     await supabase.from("rooms")
@@ -390,8 +385,5 @@ function show(id){
   document.getElementById(id).classList.remove("hidden")
 }
 
-// ======================================
 // INIT
-// ======================================
-
 show("home")
